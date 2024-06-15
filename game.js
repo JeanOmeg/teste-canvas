@@ -1,38 +1,33 @@
 const canvas = document.getElementById('gameCanvas')
 const ctx = canvas.getContext('2d')
 
-let width = window.innerWidth
-let height = window.innerHeight
-
-let tamanhoTile = height / 100 * 10
-
-let linhas = 20
-let colunas = 30
-let larguraTabuleiro = colunas * tamanhoTile
-let alturaTabuleiro = linhas * tamanhoTile
-
-canvas.width = width / 100 * 95
-canvas.height = height / 100 * 95
-
-let tamanhoSeta = 100
-let velocidadeScroll = 5
+let tamanho_tela_x
+let tamanho_tela_y
+let tamanhoTile
+let linhas
+let colunas
+let larguraTabuleiro
+let alturaTabuleiro
+let tamanhoSeta
+let velocidadeScroll
 
 function start() {
-  width = window.innerWidth
-  height = window.innerHeight
+  console.log('teste')
+  tamanho_tela_x = window.innerWidth * 0.90
+  tamanho_tela_y = window.innerHeight * 0.90
 
-  tamanhoTile = height / 100 * 10
+  tamanhoTile = 100
 
   linhas = 20
   colunas = 30
   larguraTabuleiro = colunas * tamanhoTile
   alturaTabuleiro = linhas * tamanhoTile
 
-  canvas.width = width / 100 * 95
-  canvas.height = height / 100 * 95
+  canvas.width = tamanho_tela_x
+  canvas.height = tamanho_tela_y
 
-  tamanhoSeta = 100
-  velocidadeScroll = 5
+  tamanhoSeta = canvas.height * 0.10
+  velocidadeScroll = 50
 }
 
 let offsetX = 0
@@ -209,6 +204,13 @@ function scrollarTabuleiro() {
 }
 
 // Executar a checagem de scroll periodicamente
+start()
+desenharTabuleiro()
 setInterval(scrollarTabuleiro, 100)
 
-desenharTabuleiro()
+setInterval(() => {
+  window.addEventListener('resize', () => {
+    start()
+    desenharTabuleiro()
+  })
+}, 500)
