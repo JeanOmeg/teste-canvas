@@ -32,7 +32,7 @@ function start() {
   if (verificarDispositivoMovel()) {
     tamanhoSeta = canvas.height * 0.1
   } else {
-    tamanhoSeta = canvas.width = canvas.height * 0.05
+    tamanhoSeta = canvas.height * 0.05
   }
 
   velocidadeScroll = 50
