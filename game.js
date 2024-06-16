@@ -283,11 +283,3 @@ desenharTabuleiro()
 setTimeout(desenharSetasScroll, 100)
 
 setInterval(scrollarTabuleiro, 100)
-
-setInterval(() => {
-  window.addEventListener('resize', async () => {
-    start()
-    await desenharTabuleiro()
-    setTimeout(desenharSetasScroll, 100)
-  })
-}, 100)
