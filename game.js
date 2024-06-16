@@ -18,14 +18,23 @@ function start() {
   tamanhoTile = 65
 
   linhas = 20
-  colunas = 30
+  colunas = 20
   larguraTabuleiro = colunas * tamanhoTile
   alturaTabuleiro = linhas * tamanhoTile
 
   canvas.width = tamanho_tela_x
   canvas.height = tamanho_tela_y
 
-  tamanhoSeta = canvas.width >= 600 ? canvas.height * 0.05 : canvas.height * 0.1
+  function verificarDispositivoMovel() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  }
+
+  if (verificarDispositivoMovel()) {
+    tamanhoSeta = canvas.height * 0.1
+  } else {
+    tamanhoSeta = canvas.width = canvas.height * 0.05
+  }
+
   velocidadeScroll = 50
 
   desenharTabuleiro()
@@ -195,11 +204,28 @@ function atacarJogador(atacante, defensor) {
   }
 }
 
-// Lidar com clique nas setas de deslocamento
-canvas.addEventListener('mousedown', (evento) => {
+// Função para obter as coordenadas de toque/mouse
+function obterCoordenadas(evento) {
   const rect = canvas.getBoundingClientRect()
-  mouseX = evento.clientX - rect.left
-  mouseY = evento.clientY - rect.top
+  let clientX, clientY
+
+  if (evento.touches && evento.touches.length > 0) {
+    clientX = evento.touches[0].clientX
+    clientY = evento.touches[0].clientY
+  } else {
+    clientX = evento.clientX
+    clientY = evento.clientY
+  }
+
+  return {
+    x: clientX - rect.left,
+    y: clientY - rect.top
+  }
+}
+
+// Função para iniciar o scroll
+function iniciarScroll(evento) {
+  const { x: mouseX, y: mouseY } = obterCoordenadas(evento)
 
   if (mouseX > canvas.width - tamanhoSeta && mouseY > canvas.height / 2 - tamanhoSeta / 2 && mouseY < canvas.height / 2 + tamanhoSeta / 2 && offsetX + canvas.width < larguraTabuleiro) {
     estaScrollando = true
@@ -214,12 +240,20 @@ canvas.addEventListener('mousedown', (evento) => {
     estaScrollando = true
     direcaoScroll = 'cima'
   }
-})
+}
 
-canvas.addEventListener('mouseup', () => {
+function pararScroll() {
   estaScrollando = false
   direcaoScroll = null
-})
+}
+
+// Adiciona os eventos de mouse
+canvas.addEventListener('mousedown', iniciarScroll)
+canvas.addEventListener('mouseup', pararScroll)
+
+// Adiciona os eventos de toque
+canvas.addEventListener('touchstart', iniciarScroll)
+canvas.addEventListener('touchend', pararScroll)
 
 function scrollarTabuleiro() {
   if (estaScrollando) {
