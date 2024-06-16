@@ -12,11 +12,10 @@ let tamanhoSeta
 let velocidadeScroll
 
 function start() {
-  console.log('teste')
-  tamanho_tela_x = window.innerWidth * 0.90
-  tamanho_tela_y = window.innerHeight * 0.90
+  tamanho_tela_x = window.innerWidth
+  tamanho_tela_y = window.innerHeight
 
-  tamanhoTile = 100
+  tamanhoTile = 65
 
   linhas = 20
   colunas = 30
@@ -26,8 +25,13 @@ function start() {
   canvas.width = tamanho_tela_x
   canvas.height = tamanho_tela_y
 
-  tamanhoSeta = canvas.height * 0.10
+  tamanhoSeta = canvas.width >= 600 ? canvas.height * 0.05 : canvas.height * 0.1
   velocidadeScroll = 50
+
+  desenharTabuleiro()
+  setTimeout(() => {
+    desenharSetasScroll()
+  }, 200)
 }
 
 let offsetX = 0
@@ -40,11 +44,36 @@ const botaoMover = document.getElementById('moveButton')
 const botaoAtacar = document.getElementById('attackButton')
 
 const jogadores = [
-  { x: 1, y: 1, cor: 'blue' },
-  { x: 28, y: 18, cor: 'red' }
+  { x: 0, y: 0, imagem: 'char1.png', nome: 'Player 1' },
+  { x: 1, y: 0, imagem: 'char2.png', nome: 'Player 2' }
 ]
 
 let jogadorSelecionado = null
+
+const cacheImagens = {}
+
+function carregarImagem(src, callback) {
+  if (cacheImagens[src]) {
+    callback(cacheImagens[src])
+    return
+  }
+  const img = new Image()
+  img.onload = function () {
+    cacheImagens[src] = img
+    callback(img)
+  }
+  img.src = src
+}
+
+function carregarEDesenharImagem(imgSrc, x, y, largura, altura) {
+  const img = new Image()
+  img.onload = function () {
+    ctx.drawImage(img, x, y, largura, altura)
+    ctx.lineWidth = 0.1
+    ctx.strokeRect(x, y, largura, altura)
+  }
+  img.src = imgSrc
+}
 
 // Desenhar o tabuleiro e as miniaturas
 function desenharTabuleiro() {
@@ -55,7 +84,11 @@ function desenharTabuleiro() {
     for (let coluna = 0; coluna < colunas; coluna++) {
       const x = coluna * tamanhoTile - offsetX
       const y = linha * tamanhoTile - offsetY
-      ctx.strokeRect(x, y, tamanhoTile, tamanhoTile)
+      carregarImagem('chao.png', function (img) {
+        ctx.drawImage(img, x, y, tamanhoTile, tamanhoTile)
+        ctx.lineWidth = 0.1
+        ctx.strokeRect(x, y, tamanhoTile, tamanhoTile)
+      })
     }
   }
 
@@ -63,17 +96,17 @@ function desenharTabuleiro() {
   jogadores.forEach(jogador => {
     const x = jogador.x * tamanhoTile - offsetX
     const y = jogador.y * tamanhoTile - offsetY
-    ctx.fillStyle = jogador.cor
-    ctx.fillRect(x, y, tamanhoTile, tamanhoTile)
+    carregarImagem(jogador.imagem, function (img) {
+      ctx.drawImage(img, x, y, tamanhoTile, tamanhoTile)
+    })
   })
 
-  // Desenhar as setas de deslocamento
   desenharSetasScroll()
 }
 
 // Desenhar as setas de deslocamento
 function desenharSetasScroll() {
-  ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'
+  ctx.fillStyle = 'rgb(255, 0, 0)'
   ctx.beginPath()
 
   if (offsetX + canvas.width < larguraTabuleiro) {
@@ -157,7 +190,7 @@ function moverJogador(jogador) {
 
 function atacarJogador(atacante, defensor) {
   if (defensor) {
-    alert(`${atacante.cor} ataca ${defensor.cor}!`)
+    alert(`${atacante.nome} ataca ${defensor.nome}!`)
     // Aqui você pode adicionar lógica de dano e remoção de jogador se necessário
   }
 }
@@ -205,12 +238,10 @@ function scrollarTabuleiro() {
 
 // Executar a checagem de scroll periodicamente
 start()
-desenharTabuleiro()
 setInterval(scrollarTabuleiro, 100)
 
 setInterval(() => {
   window.addEventListener('resize', () => {
     start()
-    desenharTabuleiro()
   })
 }, 500)
