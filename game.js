@@ -13,7 +13,7 @@ let velocidade_scroll
 let offsetX = 0
 let offsetY = 0
 let mouseX, mouseY
-let scroll
+let scroll_tabuleiro
 let direcao_scroll
 let jogador_selecionado = null
 const cache_imagens = {}
@@ -27,25 +27,16 @@ const lista_jogadores = [
 ]
 
 function start() {
-  tamanho_tela_x = window.innerWidth
-  tamanho_tela_y = window.innerHeight
-
-  tamanho_casa = 65
-
-  qtd_linhas = 20
+  tamanho_tela_x = 600
+  tamanho_tela_y = 400
+  tamanho_casa = 50
   qtd_colunas = 30
+  qtd_linhas = 20
   largura_tabuleiro = qtd_colunas * tamanho_casa
   altura_tabuleiro = qtd_linhas * tamanho_casa
-
   canvas.width = tamanho_tela_x
   canvas.height = tamanho_tela_y
-
-  if (verificarDispositivoMovel()) {
-    tamanho_seta = canvas.height * 0.1
-  } else {
-    tamanho_seta = canvas.height * 0.05
-  }
-
+  tamanho_seta = canvas.height * 0.1
   velocidade_scroll = 50
 }
 
@@ -69,9 +60,6 @@ function carregarImagem(src, callback) {
 
 // Função para desenhar o tabuleiro e as miniaturas
 async function desenharTabuleiro() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-  // Lista de imagens do chão a serem carregadas
   let imagensChao = []
 
   // Desenhar o chão e armazenar as imagens em uma lista
@@ -110,9 +98,6 @@ async function desenharTabuleiro() {
       }
     }
 
-    // Desenhar as setas de scroll por último
-
-    await desenharSetasScroll()
   }
 
   // Contar quantas imagens já foram carregadas
@@ -128,51 +113,50 @@ async function desenharTabuleiro() {
       }
     }
   })
+
 }
 
 
 // Desenhar as setas de deslocamento
-async function desenharSetasScroll() {
-  setTimeout(() => {
-    ctx.fillStyle = 'rgb(255, 0, 0)'
-    ctx.beginPath()
+function desenharSetasScroll() {
+  ctx.fillStyle = 'rgb(255, 0, 0)'
+  ctx.beginPath()
 
-    if (offsetX + canvas.width < largura_tabuleiro) {
-      // Seta para a direita
-      ctx.moveTo(canvas.width - tamanho_seta, canvas.height / 2 - tamanho_seta / 2)
-      ctx.lineTo(canvas.width, canvas.height / 2)
-      ctx.lineTo(canvas.width - tamanho_seta, canvas.height / 2 + tamanho_seta / 2)
-      ctx.closePath()
-      ctx.fill()
-    }
+  if (offsetX + canvas.width < largura_tabuleiro) {
+    // Seta para a direita
+    ctx.moveTo(canvas.width - tamanho_seta, canvas.height / 2 - tamanho_seta / 2)
+    ctx.lineTo(canvas.width, canvas.height / 2)
+    ctx.lineTo(canvas.width - tamanho_seta, canvas.height / 2 + tamanho_seta / 2)
+    ctx.closePath()
+    ctx.fill()
+  }
 
-    if (offsetY + canvas.height < altura_tabuleiro) {
-      // Seta para baixo
-      ctx.moveTo(canvas.width / 2 - tamanho_seta / 2, canvas.height - tamanho_seta)
-      ctx.lineTo(canvas.width / 2, canvas.height)
-      ctx.lineTo(canvas.width / 2 + tamanho_seta / 2, canvas.height - tamanho_seta)
-      ctx.closePath()
-      ctx.fill()
-    }
+  if (offsetY + canvas.height < altura_tabuleiro) {
+    // Seta para baixo
+    ctx.moveTo(canvas.width / 2 - tamanho_seta / 2, canvas.height - tamanho_seta)
+    ctx.lineTo(canvas.width / 2, canvas.height)
+    ctx.lineTo(canvas.width / 2 + tamanho_seta / 2, canvas.height - tamanho_seta)
+    ctx.closePath()
+    ctx.fill()
+  }
 
-    if (offsetX > 0) {
-      // Seta para a esquerda
-      ctx.moveTo(tamanho_seta, canvas.height / 2 - tamanho_seta / 2)
-      ctx.lineTo(0, canvas.height / 2)
-      ctx.lineTo(tamanho_seta, canvas.height / 2 + tamanho_seta / 2)
-      ctx.closePath()
-      ctx.fill()
-    }
+  if (offsetX > 0) {
+    // Seta para a esquerda
+    ctx.moveTo(tamanho_seta, canvas.height / 2 - tamanho_seta / 2)
+    ctx.lineTo(0, canvas.height / 2)
+    ctx.lineTo(tamanho_seta, canvas.height / 2 + tamanho_seta / 2)
+    ctx.closePath()
+    ctx.fill()
+  }
 
-    if (offsetY > 0) {
-      // Seta para cima
-      ctx.moveTo(canvas.width / 2 - tamanho_seta / 2, tamanho_seta)
-      ctx.lineTo(canvas.width / 2, 0)
-      ctx.lineTo(canvas.width / 2 + tamanho_seta / 2, tamanho_seta)
-      ctx.closePath()
-      ctx.fill()
-    }
-  }, 100)
+  if (offsetY > 0) {
+    // Seta para cima
+    ctx.moveTo(canvas.width / 2 - tamanho_seta / 2, tamanho_seta)
+    ctx.lineTo(canvas.width / 2, 0)
+    ctx.lineTo(canvas.width / 2 + tamanho_seta / 2, tamanho_seta)
+    ctx.closePath()
+    ctx.fill()
+  }
 }
 
 // Verificar se duas posições são adjacentes
@@ -194,6 +178,7 @@ canvas.addEventListener('click', (evento) => {
   if (jogador_selecionado) {
     botao_mover.style.display = 'inline-block'
     botao_atacar.style.display = 'inline-block'
+
 
     const outroJogador = lista_jogadores.find(jogador => jogador !== jogador_selecionado && saoAdjacentes(jogador, jogador_selecionado))
     botao_atacar.disabled = !outroJogador
@@ -248,27 +233,29 @@ function iniciarScroll(evento) {
   const { x: mouseX, y: mouseY } = obterCoordenadas(evento)
 
   if (mouseX > canvas.width - tamanho_seta && mouseY > canvas.height / 2 - tamanho_seta / 2 && mouseY < canvas.height / 2 + tamanho_seta / 2 && offsetX + canvas.width < largura_tabuleiro) {
-    scroll = true
+    scroll_tabuleiro = true
     direcao_scroll = 'direita'
   } else if (mouseX < tamanho_seta && mouseY > canvas.height / 2 - tamanho_seta / 2 && mouseY < canvas.height / 2 + tamanho_seta / 2 && offsetX > 0) {
-    scroll = true
+    scroll_tabuleiro = true
     direcao_scroll = 'esquerda'
   } else if (mouseY > canvas.height - tamanho_seta && mouseX > canvas.width / 2 - tamanho_seta / 2 && mouseX < canvas.width / 2 + tamanho_seta / 2 && offsetY + canvas.height < altura_tabuleiro) {
-    scroll = true
+    scroll_tabuleiro = true
     direcao_scroll = 'baixo'
   } else if (mouseY < tamanho_seta && mouseX > canvas.width / 2 - tamanho_seta / 2 && mouseX < canvas.width / 2 + tamanho_seta / 2 && offsetY > 0) {
-    scroll = true
+    scroll_tabuleiro = true
     direcao_scroll = 'cima'
   }
 }
 
 function pararScroll() {
-  scroll = false
+  scroll_tabuleiro = false
   direcao_scroll = null
+  setTimeout(desenharSetasScroll, 100)
 }
 
-function scrollarTabuleiro() {
-  if (scroll) {
+async function scrollarTabuleiro() {
+
+  if (scroll_tabuleiro) {
     if (direcao_scroll === 'direita' && offsetX + canvas.width < largura_tabuleiro) {
       offsetX = Math.min(largura_tabuleiro - canvas.width, offsetX + velocidade_scroll)
     } else if (direcao_scroll === 'esquerda' && offsetX > 0) {
@@ -290,9 +277,10 @@ canvas.addEventListener('mouseup', pararScroll)
 canvas.addEventListener('touchstart', iniciarScroll)
 canvas.addEventListener('touchend', pararScroll)
 
-// Executar a checagem de scroll periodicamente
+// Executar a checagem de scroll_tabuleiro periodicamente
 start()
 desenharTabuleiro()
+setTimeout(desenharSetasScroll, 100)
 
 setInterval(scrollarTabuleiro, 100)
 
@@ -300,5 +288,6 @@ setInterval(() => {
   window.addEventListener('resize', async () => {
     start()
     await desenharTabuleiro()
+    setTimeout(desenharSetasScroll, 100)
   })
 }, 100)
